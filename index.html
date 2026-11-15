@@ -98,6 +98,7 @@ section[id]{scroll-margin-top:96px}
 @keyframes twinkle{0%,100%{opacity:1;filter:brightness(1.1)}50%{opacity:.55;filter:brightness(.8)}}
 @media (max-width:640px){
   .nav{order:3;width:100%;margin-left:0;overflow-x:auto}
+  .nav a{white-space:nowrap;flex:none}
   .tools{margin-left:auto}
 }
 
@@ -453,7 +454,16 @@ html.lock{overflow:hidden}
 .sl-nav{display:flex;justify-content:center;gap:10px;margin-top:14px}
 .sl-nav button{width:12px;height:12px;padding:0;border-radius:50%;border:2px solid var(--gold);background:transparent;cursor:pointer}
 .sl-nav button[aria-current="true"]{background:var(--gold)}
-@media (max-width:640px){.sl-1{flex-direction:column;text-align:center}.sl-pol{width:min(46%,160px);order:0}}
+@media (max-width:640px){.sl-track{align-items:flex-start}.sl-1{flex-direction:column;text-align:center}.sl-pol{width:min(40%,120px);order:0}}
+@media (max-width:480px){
+  .sl{min-height:0;padding:20px 18px;gap:8px}
+  .sl-word{font-size:2.1rem;margin-bottom:4px}
+  .sl h2{font-size:1.4rem}
+  .sl-big{font-size:1.35em}
+  .sl-intro{font-size:.92rem;margin-top:4px}
+  .sl-1{gap:12px}
+  .sl-1 .sl-txt{gap:3px}
+}
 
 .hero-logo{display:block;width:clamp(64px,9vw,88px);height:auto;margin-bottom:14px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.25));transform:rotate(-6deg)}
 .hero h1,.brand b{font-family:"Henny Penny","Mountains of Christmas",Georgia,serif;font-weight:400}
@@ -910,7 +920,7 @@ function dayIndex(){
   var n=hoy(),a=new Date(n.getFullYear(),n.getMonth(),n.getDate()),b=new Date(ANIO,11,1);
   return Math.round((a-b)/864e5)+1;
 }
-function abiertas(){return Math.max(0,Math.min(24,dayIndex()));}
+function abiertas(){if(S.user==='pia')return 24;return Math.max(0,Math.min(24,dayIndex()));}
 function fmt(s){
   s=Math.round(s);var h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;
   function p(n){return String(n).padStart(2,'0');}
@@ -1292,8 +1302,14 @@ if(PREVIEW){
    +G.map(function(id){return '<li class="gst" aria-hidden="true"><img src="'+byId[id].img+'" alt="" width="46" height="46"><span>&nbsp;</span></li>';}).join('');
   var tr=$('#sl-track'),nav=$('#sl-nav'),sl=tr.children,i;
   for(i=0;i<sl.length;i++)(function(n){var b=document.createElement('button');b.type='button';b.setAttribute('aria-label','Imagen '+(n+1));b.addEventListener('click',function(){tr.scrollTo({left:sl[n].offsetLeft-tr.offsetLeft,behavior:'smooth'});});nav.appendChild(b);})(i);
-  function act(){var n=Math.round(tr.scrollLeft/(tr.clientWidth+16));[].forEach.call(nav.children,function(b,k){b.setAttribute('aria-current',k===n?'true':'false');});}
-  tr.addEventListener('scroll',act,{passive:true});act();
+  function act(){
+    var n=Math.round(tr.scrollLeft/(tr.clientWidth+16));
+    [].forEach.call(nav.children,function(b,k){b.setAttribute('aria-current',k===n?'true':'false');});
+    if(window.innerWidth<=640&&sl[n])tr.style.height=sl[n].offsetHeight+'px';else tr.style.height='';
+  }
+  tr.addEventListener('scroll',act,{passive:true});
+  window.addEventListener('resize',act);
+  act();
   tr.addEventListener('keydown',function(e){if(e.key==='ArrowRight')tr.scrollBy({left:tr.clientWidth+16,behavior:'smooth'});if(e.key==='ArrowLeft')tr.scrollBy({left:-(tr.clientWidth+16),behavior:'smooth'});});
 })();
 /* ---------- casos ---------- */
