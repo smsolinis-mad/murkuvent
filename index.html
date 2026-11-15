@@ -411,6 +411,8 @@ html.lock{overflow:hidden}
   .g-right .tool{flex:1 1 0;max-width:64px}
   .game.big .board{min-width:0}
   .game.big .g-center{overflow-x:visible}
+  .game.huge .cell .pl{border-width:1px;border-radius:5px}
+  .game.huge .cell .pl b{display:none}
   .game.huge .g-left,.g-left{position:static;max-height:none;overflow:visible;display:flex;flex-direction:column;gap:8px}
   .g-left>h3,.g-left .hint-t{display:none}
   .clues{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;grid-template-areas:"p s n" ". c .";align-items:center;gap:6px}
@@ -454,7 +456,13 @@ html.lock{overflow:hidden}
 .sl-nav{display:flex;justify-content:center;gap:10px;margin-top:14px}
 .sl-nav button{width:12px;height:12px;padding:0;border-radius:50%;border:2px solid var(--gold);background:transparent;cursor:pointer}
 .sl-nav button[aria-current="true"]{background:var(--gold)}
-@media (max-width:640px){.sl-track{align-items:flex-start}.sl-1{flex-direction:column;text-align:center}.sl-pol{width:min(40%,120px);order:0}}
+@media (max-width:640px){
+  .sl-track{flex-direction:column;overflow-x:visible;scroll-snap-type:none;height:auto!important;gap:14px}
+  .sl{flex:none;width:100%;min-height:0;scroll-snap-align:none}
+  .sl-nav{display:none}
+  .sl-1{flex-direction:column;text-align:center}
+  .sl-pol{width:min(40%,120px);order:0}
+}
 @media (max-width:480px){
   .sl{min-height:0;padding:20px 18px;gap:8px}
   .sl-word{font-size:2.1rem;margin-bottom:4px}
