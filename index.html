@@ -512,9 +512,9 @@ html.lock{overflow:hidden}
     </a>
     <nav class="nav" aria-label="Secciones">
       <a href="#inicio" data-go="inicio">Home</a>
-      <a href="#espacio" data-go="espacio">Mi espacio</a>
+      <a href="#espacio" data-go="espacio">Jugar</a>
       <a href="#reglas" data-go="reglas">Reglas</a>
-      <a href="#ranking" data-go="ranking">Ranking de tiempos</a>
+      <a href="#ranking" data-go="ranking">Ranking</a>
     </nav>
     <div class="tools">
       <span id="user-chip"></span>
@@ -1063,13 +1063,42 @@ function diaInvitado(id){
   try{for(var d=1;d<=24;d++){var c=CASOS[d];if(c&&c.personas&&c.personas.indexOf(id)>-1)return d;}}catch(e){}
   return 99;
 }
+var SUPA_URL='https://pfqwhxgfkzuccyaokaiu.supabase.co',SUPA_KEY='sb_publishable_4yFYU6qGDTDGuydEP6U9Kw_Mm6eZDMk';
+function subirTiempo(persona_id,dia,segundos){
+  try{
+    fetch(SUPA_URL+'/rest/v1/tiempos?on_conflict=persona_id,dia',{
+      method:'POST',
+      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify([{persona_id:persona_id,dia:dia,segundos:segundos}])
+    }).catch(function(){});
+  }catch(e){}
+}
+function fetchTiemposRemotos(){
+  try{
+    return fetch(SUPA_URL+'/rest/v1/tiempos?select=persona_id,dia,segundos',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}})
+      .then(function(r){if(!r.ok)throw 0;return r.json();})
+      .then(function(rows){
+        var m={};
+        rows.forEach(function(x){if(!m[x.persona_id])m[x.persona_id]={};m[x.persona_id][x.dia]=x.segundos;});
+        return m;
+      }).catch(function(){return null;});
+  }catch(e){return Promise.resolve(null);}
+}
+var RK_SEQ=0;
 function renderRanking(){
-  var invit=['amigolaura','santiago2','maria','josefina','coti','virgi','blanca','javi','rob','claudia','jorge'],ocultos=['pia','pipa'],open=abiertas();
+  var seq=++RK_SEQ;
+  fetchTiemposRemotos().then(function(remote){
+    if(seq!==RK_SEQ)return;
+    pintarRanking(remote);
+  });
+}
+function pintarRanking(remote){
+  var invit=['amigolaura','santiago2','maria','josefina','coti','virgi','blanca','javi','rob','claudia','jorge','lucia'],ocultos=['pia','pipa'],open=abiertas();
   var rows=[],grises=[];
   PEOPLE.forEach(function(p){
     if(ocultos.indexOf(p.id)>-1)return;
     if(invit.indexOf(p.id)>-1&&diaInvitado(p.id)>open){grises.push(p);return;}
-    var t=readJSON('murdokus.tiempos2.'+p.id),k=Object.keys(t),tot=0;k.forEach(function(x){tot+=t[x];});
+    var t=(remote&&remote[p.id])?remote[p.id]:readJSON('murdokus.tiempos2.'+p.id),k=Object.keys(t),tot=0;k.forEach(function(x){tot+=t[x];});
     rows.push({p:p,n:k.length,tot:tot});
   });
   rows.sort(function(a,b){return b.n-a.n||(a.n?a.tot-b.tot:0)||a.p.name.localeCompare(b.p.name,'es');});
@@ -1082,7 +1111,7 @@ function renderRanking(){
     h+='<tr class="gris"><td class="pos">·</td><td><span class="pl"><img src="'+p.img+'" alt="" width="36" height="36">Invitado especial</span></td><td class="num">—</td><td class="num">—</td></tr>';
   });
   $('#rk-body').innerHTML=h;
-  $('#rk-note').textContent='Se muestran los tiempos guardados en este navegador.'+(grises.length?' Los invitados especiales se unen al ranking cuando aparecen en un caso.':'');
+  $('#rk-note').textContent=(remote?'Ranking compartido entre todos los jugadores.':'No se pudo conectar: mostrando solo tus tiempos guardados en este navegador.')+(grises.length?' Los invitados especiales se unen al ranking cuando aparecen en un caso.':'');
 }
 var vista='inicio',H=(location.hash||'#inicio').slice(1);
 
@@ -1249,8 +1278,11 @@ window.murdokus={
   marcarHecho:function(dia,segundos){
     if(!S.user||!(dia>=1&&dia<=24)||!(segundos>=0))return false;
     var t=readJSON('murdokus.tiempos2.'+S.user);
-    if(t[dia]==null||segundos<t[dia])t[dia]=Math.round(segundos);
-    store.set('murdokus.tiempos2.'+S.user,JSON.stringify(t));
+    if(t[dia]==null||segundos<t[dia]){
+      t[dia]=Math.round(segundos);
+      store.set('murdokus.tiempos2.'+S.user,JSON.stringify(t));
+      subirTiempo(S.user,dia,t[dia]);
+    }
     renderAll();return true;
   }
 };
